@@ -1,4 +1,5 @@
 peli aloita on "start.py"
+
 tietokannan query on "tietokannat.txt"
 
 Ryhmä 5:
