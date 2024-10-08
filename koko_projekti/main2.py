@@ -37,6 +37,9 @@ class Peli:
 
     def loop(self):
         game = self.menu1()
+        if game == 3:
+            self.show_results()
+            self.menu1()
         if game == 2 and len(data.get_info('ports')) < 18:
             self.last_game()
             game -= 1
@@ -55,6 +58,7 @@ class Peli:
             self.round = data.get_round()
             for player in self.players:
                 player.set_params()
+
         
         
         self.make_ports()
@@ -62,6 +66,46 @@ class Peli:
             self.check_events()
             self.show()
             self.turns()
+    
+    def show_results(self):
+        res = data.get_results()
+        x = self.start_x
+        y = self.start_y
+        
+        font = pygame.font.SysFont('Arial', 14)
+        screen = self.näyttö
+        max_w = 400
+        next = False
+
+
+        jonot = [jono for jono in res]
+
+        screen.fill((0, 0, 0))
+        
+
+        while not next:
+            temp_y = y
+
+            
+            for i, jono in enumerate(jonot):
+                merkkijono = f'{jono['peli_id']}: {jono['pyörät']} {jono['voittaja']} {jono['pääoma']}'
+                data.render_text_in_box(merkkijono, x, temp_y, max_w, font, screen, True)
+                
+                temp_y += 20
+
+            
+
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    
+                    if event.key == pygame.K_f:
+                        next = True
+                elif event.type == pygame.QUIT:
+                    exit()
+
+            pygame.display.update()
+        return
+        
 
     def show(self):
         self.piirrä_näyttö()
@@ -122,7 +166,7 @@ class Peli:
         paikat = {
             'bonus': 1,
             'bill': 2,
-            'taxi': 3,
+            'airbus': 3,
             'bonus2': 4,
             'rent': 5,
             'billx2': 6,
@@ -154,7 +198,9 @@ class Peli:
             pass
 
     def rent(self, player):
-        data.render_text_in_box(f'voit rentoutua 1 turn (Y/N)', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 40, 100, self.fontti, self.näyttö, True)
+        x = self.start_x
+        y = self.start_y
+        data.render_text_in_box(f'voit rentoutua 1 turn (Y/N)', x, y, 100, self.fontti, self.näyttö, True)
         self.show_players()
         check = False
         yes = False
@@ -174,7 +220,9 @@ class Peli:
         self.show()
 
     def rentoutu(self, player):
-        data.render_text_in_box(f'tämä turn oot levämässä (d)', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 40, 100, self.fontti, self.näyttö, True)
+        x = self.start_x
+        y = self.start_y
+        data.render_text_in_box(f'tämä turn oot levämässä (d)', x, y, 100, self.fontti, self.näyttö, True)
         self.show_players()
         player.rent = False
         check = False
@@ -190,10 +238,12 @@ class Peli:
 
 
     def kirppis(self, player):
+        x = self.start_x
+        y = self.start_y
         items = random.randint(1, 15)
         cash = items * 15
         player.add_money(cash)
-        data.render_text_in_box(f'Myit tavaroita ja sait {cash} (d)', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 50, 100, self.fontti, self.näyttö, True)
+        data.render_text_in_box(f'Myit tavaroita ja sait {cash} (d)', x, y, 100, self.fontti, self.näyttö, True)
         self.show_players()
         check = False
 
@@ -207,12 +257,19 @@ class Peli:
         self.show()
     
     def chance(self, player):
+        x = self.start_x
+        y = self.start_y
+        max_w = 200
+        jonot = [
+            f'Turn: {self.turn} ({player.name})',
+            'Haluatko try chance? (Y/N)',
+            'if nappi on 1 - hävitset puoli rahaa, mut muuita antaa nappi X 100']
+        for jono in jonot:
+            data.render_text_in_box(jono, x, y, max_w, self.fontti, self.näyttö, True)
+            y += 20
         check = False
         chance_try = False
-        
-        data.render_text_in_box(f'Turn: {self.turn} ({player.name})', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 50, 100, self.fontti, self.näyttö, True)
-        data.render_text_in_box(f'Haluatko try chance? (Y/N)', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 40, 100, self.fontti, self.näyttö, True)
-        data.render_text_in_box(f'if nappi shows 1 - you loose half, but another gives nappix100', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 15, 100, self.fontti, self.näyttö, True)
+      
         self.show_players()
         while not check:
 
@@ -237,8 +294,8 @@ class Peli:
 
     def chances(self, player):
         
-        x = self.näytön_leveys / 2 - 50
-        y = self.näytön_korkeus / 2 - 50
+        x = self.start_x
+        y = self.start_y
 
         
         cube = random.randint(1, 6)
@@ -273,10 +330,12 @@ class Peli:
 
 
     def airtaxi(self, player):
+        x = self.start_x
+        y = self.start_y
         distance = random.randint(1, 9)
         for i in range(distance):
             player.change_position()
-        data.render_text_in_box(f'oot lentanut lisäksi {distance} points (d)', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 40, 100, self.fontti, self.näyttö, True)
+        data.render_text_in_box(f'oot lentanut lisäksi {distance} points (d)', x, y, 100, self.fontti, self.näyttö, True)
         player.position += distance
         self.show_players()
         check = False
@@ -290,9 +349,11 @@ class Peli:
         self.show()
 
     def bonus(self, amount, player):
+        x = self.start_x
+        y = self.start_y
         check = False
         player.add_money(amount)
-        data.render_text_in_box(f'sait {amount} bonus! (d)', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 40, 100, self.fontti, self.näyttö, True)
+        data.render_text_in_box(f'sait {amount} bonus! (d)', x, y, 100, self.fontti, self.näyttö, True)
         self.show_players()
         while not check:
             pygame.display.flip()
@@ -304,12 +365,14 @@ class Peli:
         self.show()
 
     def bill(self, amount, player):
+        x = self.start_x
+        y = self.start_y
         check = False
         if player.money - amount < 0:
             while player.money - amount <0:
                 self.not_enough(player, f'to pay bill {amount}, sell something', True)
         player.add_money(-amount)
-        data.render_text_in_box(f'sait {amount} bill! (d)', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 40, 100, self.fontti, self.näyttö, True)
+        data.render_text_in_box(f'sait {amount} bill! (d)', x, y, 100, self.fontti, self.näyttö, True)
         self.show_players()
         while not check:
             pygame.display.flip()
@@ -321,12 +384,22 @@ class Peli:
         self.show()
 
     def third(self, sets, player):
+        x = self.start_x
+        y = self.start_y
+        max_w = 300
         check = False
         lvl_up = False
         
-        data.render_text_in_box(f'Turn: {self.turn} ({player.name})', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 50, 100, self.fontti, self.näyttö, True)
-        data.render_text_in_box(f'Haluatko add lvl? (Y/N)', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 40, 100, self.fontti, self.näyttö, True)
-        data.render_text_in_box(f'nappi on: {self.last_roll}', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 15, 100, self.fontti, self.näyttö, True)
+        jonot = [
+            f'Turn: {self.turn} ({player.name})',
+            'Haluatko add lvl to your property?',
+            f'nappi oli: {self.last_roll}'
+        ]
+
+        for jono in jonot:
+            data.render_text_in_box(jono, x, y, max_w, self.fontti, self.näyttö, True)
+            y += 20
+
         self.show_players()
         while not check:
 
@@ -354,8 +427,8 @@ class Peli:
     def property_level(self, set_property, player, lvl=False, sell=False):
         pygame.display.update()
         self.show()
-        x = self.näytön_leveys / 2 - 50
-        y = self.näytön_korkeus / 2 - 50
+        x = self.start_x
+        y = self.start_y
 
         arrow = Arrow(x, y + 20, len(set_property))
         poly_points = arrow.points_now
@@ -428,7 +501,9 @@ class Peli:
         
         
     def not_enough(self, player, target, sell=False):
-        data.render_text_in_box(f'not enough money to {target}, press d to continue', self.näytön_leveys / 2 - 50, self.näytön_korkeus / 2 - 50, 300, self.fontti, self.näyttö, True)
+        x = self.start_x
+        y = self.start_y
+        data.render_text_in_box(f'not enough money to {target}, press d to continue', x, y, 300, self.fontti, self.näyttö, True)
         self.show_players()
         chosen = False
         while not chosen:
@@ -453,7 +528,9 @@ class Peli:
         self.show()
 
     def raha_loppu(self, player):
-        data.render_text_in_box(f'Anteeksi, sulla ei ole mitään, {player.name} loose (d)', self.start_x, self.start_y, 300, self.fontti, self.näyttö, True)
+        x = self.start_x
+        y = self.start_y
+        data.render_text_in_box(f'Anteeksi, sulla ei ole mitään, {player.name} loose (d)', x, y, 300, self.fontti, self.näyttö, True)
         self.show_players()
         chosen = False
         while not chosen:
@@ -494,8 +571,8 @@ class Peli:
                 sets_property.append(port.name)
             return sets_property
         
-    def save_game(self, round, player_n=None, prop_money=None, exit=False):
-        data.save_game(round, player_n, prop_money, exit)
+    def save_game(self, round):
+        data.save_game(round, None, None, True)
 
     def first(self, player):
         x, y = self.start_x, self.start_y
@@ -516,7 +593,7 @@ class Peli:
                     if event.key == pygame.K_y:
                         nappi = True
                 elif event.type == pygame.QUIT:
-                    self.save_game(self.round, None, None, True)
+                    self.save_game(self.round)
                     exit()
 
 
@@ -557,13 +634,17 @@ class Peli:
             voittaja = self.players[1]
             capital = ress[1]
 
-        jono = f'the game is over in {self.round} rounds'
-        jono2 = f'{voittaja.name} on voittanut with {capital} capital! (d)'
+        jonot = [
+            f'the game is over in {self.round} rounds',
+            f'{voittaja.name} on voittanut with {capital} capital! (d)'
+        ]
+        
 
         pygame.display.update()
         self.show()
-        data.render_text_in_box(jono, x, y, 300, self.fontti, self.näyttö, True)
-        data.render_text_in_box(jono2, x, y + 20, 300, self.fontti, self.näyttö, True)
+        for jono in jonot:
+            data.render_text_in_box(jono, x, y, 300, self.fontti, self.näyttö, True)
+            y += 20
         answer = False
         while not answer:
             pygame.display.flip()
@@ -606,10 +687,18 @@ class Peli:
         self.show()
 
     def exchange(self, player, port):
+        x, y = self.start_x, self.start_y
         fee = port.price // 10
-        data.render_text_in_box(f'u paid fee {fee}', self.näytön_leveys / 2 - 130, self.näytön_korkeus / 2 + 150, 100, self.fontti, self.näyttö, True)
-        data.render_text_in_box(f'{port.owner} receive fee', self.näytön_leveys / 2 - 130, self.näytön_korkeus / 2 + 160, 100, self.fontti, self.näyttö, True)
-        data.render_text_in_box(f'press d to continue', self.näytön_leveys / 2 - 130, self.näytön_korkeus / 2 + 170, 100, self.fontti, self.näyttö, True)
+
+        jonot = [
+            f'u paid fee {fee}',
+            f'{port.owner} receive fee',
+            '(d) to continue'
+        ]
+
+        for jono in jonot:
+            data.render_text_in_box(jono, x, y, 300, self.fontti, self.näyttö, True)
+            y += 20
         self.show_players()
         for gamer in self.players:
             if gamer.name == player.name:
@@ -673,21 +762,39 @@ class Peli:
                 exit()
 
     def menu1(self):
-        arrow = Arrow(self.näytön_leveys / 2, self.näytön_korkeus / 2, 2)
-        while True:
-            
-            next = False
+        x = self.start_x
+        y = self.start_y
+        y_temp = y
+        font = self.fontti
+        screen = self.näyttö
+        max_w = 200
+        arrow = Arrow(x, y, 3)
+        next = False
+        arrow_pt = []
+        for i in range(3):
+            arrow_pt.append([x - 15, y_temp + 5])
+            y_temp += 20
 
-            self.näyttö.fill((0, 0, 0))
-            
-            teksti = self.fontti.render('play?', True, (255, 255, 255))
-            teksti2 = self.fontti.render('new game', True, (255, 255, 255))
-            teksti3 = self.fontti.render('continue last game', True, (255, 255, 255))
-            self.näyttö.blit(teksti, (25, self.näytön_korkeus - 50))
-            self.näyttö.blit(teksti2, (self.näytön_leveys/2, self.näytön_korkeus/2))
-            self.näyttö.blit(teksti3, (self.näytön_leveys/2, self.näytön_korkeus/2 + 20))
-            pygame.draw.polygon(self.näyttö, arrow.color, arrow.points_now)
-            
+        poly_points = arrow.points_now
+
+        jonot = ['new game', 'continue last game', 'katso results']
+        
+        his = 'Peli on vuoropohjainen strategiapeli, jossa on taloudellinen painotus. Kaksi pelaajaa kilpailevat lentokenttien ostamisesta ja hallinnoinnista. Peli perustuu SQL-tietokantaan ja on toteutettu käyttämällä Pygame-moduulia. Tavoitteena on säilyttää pääoma pidempään kuin vastustaja, ajamalla hänet konkurssiin lentokenttien ostamisen, tulojen keräämisen, sakkojen maksamisen ja muiden pelitapahtumien kautta.'
+
+        while not next:
+            screen.fill((0, 0, 0))
+            data.render_text_in_box(his, x - 200, y - 150, 500, font, screen, True)
+            data.render_text_in_box('play?', x - 200, y + 150, max_w, font, screen, True)
+            y_temp = y
+            for i, jono in enumerate(jonot):
+                data.render_text_in_box(jono, x, y_temp, max_w, font, screen, True)
+                
+                y_temp += 20
+
+            pygame.draw.polygon(screen, (0, 0, 0), poly_points) 
+            poly_points = arrow.points_now  
+            pygame.draw.polygon(screen, arrow.color, poly_points)  
+
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_DOWN:
@@ -696,17 +803,21 @@ class Peli:
                         arrow.move_up()
                     elif event.key == pygame.K_f:
                         next = True
+                        idx = arrow_pt.index((arrow.x_y_now))
                 elif event.type == pygame.QUIT:
                     exit()
-            
+
             pygame.display.update()
 
-            if next:
-                self.fontti = pygame.font.SysFont('Arial', 10)
-                if arrow.points_now[0][1] == arrow.points_start[0][1]:
-                    return 1
-                else:
-                    return 2
+        if next:
+            self.fontti = pygame.font.SysFont('Arial', 10)
+            if idx == 0:
+                return 1
+            elif idx == 1:
+                return 2
+            elif idx == 2:
+                return 3
+
             
 
     def finish_game(self, player):
@@ -714,7 +825,7 @@ class Peli:
         y = self.start_y
 
         prop_money = 0
-        max_w = 300
+        max_w = 500
 
         data.render_text_in_box('the game is finished', x, y, max_w, self.fontti, self.näyttö, True)
         y += 20
@@ -722,7 +833,7 @@ class Peli:
         y += 20
         stats = player.get_stats()
         for prop in stats:
-            jono = f'{prop["name"]:>40}{prop["price"]}'
+            jono = f'{prop["name"]:>40} {prop["price"]}'
             prop_money += prop['price']
             data.render_text_in_box(jono, x, y, max_w, self.fontti, self.näyttö, True)
             y += 20
@@ -917,5 +1028,4 @@ class Port:
     
     
 
-def start():
-    Peli()
+Peli()
